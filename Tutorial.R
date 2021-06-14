@@ -143,3 +143,59 @@ filtered_sim
 
 ggraph(filtered_sim, layout = "with_kk") +
   geom_edge_link(aes(alpha = weight))
+
+## 4.1. Hierarchical Clustering ----
+# calculate distance matrix from similarity matrix
+d <- as.dist(1-nodes_correlation)
+d
+
+# average-linkage clustering
+hc <- hclust(d, method = "average")
+plot(hc)
+
+# cut dendrogram tree to k cluster
+cls <- cutree(hc, k = 4)
+nodes_cluster <- nodes_centrality |>
+  mutate(cluster = cls)
+
+# Exploring cluster
+nodes_cluster |>
+  group_by(cluster) |>
+  summarize(
+    size = n(),
+    avg_degree = mean(degree),
+    avg_strength = mean(strength)
+  )
+
+# Visualize cluster
+V(g)$cluster <- nodes_cluster$cluster
+ggraph(g, layout = "with_kk") +
+  geom_edge_link(aes(alpha = weight)) +
+  geom_node_point(aes(color = factor(cluster)))
+
+ggraph(g, layout = "with_kk") +
+  geom_edge_link(aes(alpha = weight)) +
+  geom_node_point(aes(color = factor(cluster))) +
+  facet_nodes(~cluster, scales = "free")
+
+## 4.2. Interactive Visualization ----
+# Basic
+netvis <- toVisNetworkData(g)
+visNetwork(nodes = netvis$nodes, edges = netvis$edges, width = 300, height = 300)
+
+# Layout
+visNetwork(nodes = netvis$nodes, edges = netvis$edges, width = 300, height = 300) |>
+  visIgraphLayout(layout = "layout_with_kk")
+
+# Highlight nearest nodes and ties
+visNetwork(nodes = netvis$nodes, edges = netvis$edges, width = 300, height = 300) |>
+  visIgraphLayout(layout = "layout_with_kk") |>
+  visOptions(highlightNearest = T)
+
+# Select nodes and groups of nodes
+V(g)$color <- V(g)$cluster #copy cluster to column
+netvis <- toVisNetworkData(g) #update changes
+
+visNetwork(nodes = netvis$nodes, edges = netvis$edges) |>
+  visIgraphLayout(layout = "layout_with_kk") |>
+  visOptions(highlightNearest = T, nodesIdSelection = T, selectedBy = "group")
