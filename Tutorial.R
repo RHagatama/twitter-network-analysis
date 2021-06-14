@@ -64,7 +64,7 @@ nodes_centrality <- nodes |>
 nodes_centrality
 
 
-## 2.2. Ties betweenness ----
+## 2.2. Ties Betweenness ----
 # ties with the most frequent shortest path through it
 ties_betweenness <- ties |>
   mutate(betweenness = edge_betweenness(g, weights = 1/weight)) |>
@@ -119,7 +119,7 @@ ggraph(g, layout = "with_kk") +
 ggraph(g, layout = "with_kk") +
   geom_edge_link(aes(filter = is_weak), alpha = 0.5)
 
-## 3.1. Connection Pattern
+## 3.1. Similarity ----
 # Nodes Similarity
 nodes_correlation <- as_adjacency_matrix(g, attr = "weight", names = F) |>
   as.matrix() |>
